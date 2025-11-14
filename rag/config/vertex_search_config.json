@@ -1,0 +1,16 @@
+{
+  "project_id": "paperrec-ai",
+  "location": "global",
+  "collection_id": "default_collection",
+  "data_stores": {
+    "veritai-smart-city-kb-ds": "projects/550651297425/locations/global/collections/default_collection/dataStores/veritai-smart-city-kb-ds"
+  },
+  "search_app": {
+    "id": "veritai-smart-city-engine",
+    "name": "projects/550651297425/locations/global/collections/default_collection/engines/veritai-smart-city-engine",
+    "display_name": "VeritAI Smart City Engine",
+    "data_store_ids": [
+      "veritai-smart-city-kb-ds"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+google-cloud-discoveryengine
+fastapi
+uvicorn
+pydantic
+google-cloud-firestore
+google-genai

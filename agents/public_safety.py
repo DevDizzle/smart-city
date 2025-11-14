@@ -1,0 +1,146 @@
+"""
+VeritAI Smart-City Use Case: Public Safety Specialist Agent
+"""
+import json
+from veritai.llm_client import GeminiClient
+from ..rag.vertex_search import search_app, Doc
+from ..schemas.common import Evidence, Risk, Requirement
+from ..schemas.public_safety import PublicSafetyFinding
+
+# Define JSON schemas for LLM output
+RISK_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "risk_id": {"type": "string", "description": "A unique identifier for the risk (e.g., 'RISK-001')."},
+        "description": {"type": "string", "description": "A description of the risk."},
+        "severity": {"type": "string", "description": "The severity of the risk (e.g., 'High', 'Medium', 'Low')."},
+        "mitigation": {"type": "string", "description": "A suggested mitigation for the risk."}
+    },
+    "required": ["risk_id", "description", "severity", "mitigation"]
+}
+
+RISK_LIST_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "risks": {
+            "type": "array",
+            "items": RISK_SCHEMA
+        }
+    },
+    "required": ["risks"]
+}
+
+REQUIREMENT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "req_id": {"type": "string", "description": "A unique identifier for the requirement (e.g., 'REQ-001')."},
+        "description": {"type": "string", "description": "A description of the requirement."},
+        "is_met": {"type": "boolean", "description": "Whether the requirement has been met."}
+    },
+    "required": ["req_id", "description", "is_met"]
+}
+
+REQUIREMENT_LIST_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "requirements": {
+            "type": "array",
+            "items": REQUIREMENT_SCHEMA
+        }
+    },
+    "required": ["requirements"]
+}
+
+
+class PublicSafetySpecialist:
+    """
+    A specialist agent that analyzes a project brief for public safety implications.
+    """
+
+    def __init__(self):
+        self.gemini_client = GeminiClient()
+
+    def analyze_brief(self, project_brief: dict) -> PublicSafetyFinding:
+        """
+        Analyzes a project brief, queries the knowledge base, and returns a
+        PublicSafetyFinding.
+
+        Args:
+            project_brief: A dictionary containing the project brief.
+                Expected keys: "corridors", "sensors", "storage", "vendor_hints".
+
+        Returns:
+            A PublicSafetyFinding object.
+        """
+        # Extract keywords for KB search
+        sensors_dict = project_brief.get("sensors", {})
+        enabled_sensors = [sensor for sensor, enabled in sensors_dict.items() if enabled]
+        vendor_hints = project_brief.get("vendor_hints", [])
+        query_parts = enabled_sensors + vendor_hints
+        query = " ".join(query_parts)
+
+        # Augment query with core public safety topics
+        if "alpr" in query:
+            query += " CJIS ALPR handling"
+        if "video" in query or "audio" in query:
+            query += " Sunshine Law video retention notice"
+        
+        # Search the knowledge base
+        retrieved_docs: list[Doc] = search_app(query=query, top_k=5)
+
+        # Convert Docs to Evidence
+        evidence = [
+            Evidence(
+                title=doc.title,
+                uri=doc.uri,
+                snippet=doc.snippet,
+                source=doc.source
+            ) for doc in retrieved_docs
+        ]
+
+        # Use LLM to identify risks
+        risks_prompt = f"""
+        Given the following project brief and retrieved evidence, identify potential public safety risks.
+        Project Brief: {json.dumps(project_brief, indent=2)}
+        Evidence: {json.dumps([e.model_dump() for e in evidence], indent=2)}
+
+        Please output a list of risks in JSON format.
+        """
+        llm_risks_output = self.gemini_client.generate_structured_content(risks_prompt, RISK_LIST_SCHEMA)
+        risks = [Risk(**r) for r in llm_risks_output.get("risks", [])] if llm_risks_output else []
+
+
+        # Use LLM to identify requirements
+        requirements_prompt = f"""
+        Given the following project brief and identified risks, identify necessary public safety requirements.
+        Project Brief: {json.dumps(project_brief, indent=2)}
+        Identified Risks: {json.dumps([r.model_dump() for r in risks], indent=2)}
+
+        Please output a list of requirements in JSON format.
+        """
+        llm_requirements_output = self.gemini_client.generate_structured_content(requirements_prompt, REQUIREMENT_LIST_SCHEMA)
+        requirements = [Requirement(**r) for r in llm_requirements_output.get("requirements", [])] if llm_requirements_output else []
+
+        # Calculate confidence (dummy logic for now, can be LLM-driven later)
+        confidence = 0.85 if risks and requirements else 0.5
+
+        return PublicSafetyFinding(
+            evidence=evidence,
+            risks=risks,
+            requirements=requirements,
+            notes="Initial analysis based on project brief, KB retrieval, and LLM reasoning.",
+            confidence=confidence,
+        )
+
+if __name__ == '__main__':
+    # Example Usage
+    specialist = PublicSafetySpecialist()
+    sample_brief = {
+        "corridors": ["A", "B"],
+        "sensors": {"alpr": True, "video": True, "audio": False},
+        "storage": "cloud",
+        "vendor_hints": ["Ubicquia"]
+    }
+    finding = specialist.analyze_brief(sample_brief)
+    print(finding.model_dump_json(indent=2))
+
