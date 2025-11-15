@@ -20,11 +20,15 @@ COPY . /app
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt --verbose
 
-# Make port 8000 available to the world outside this container
-EXPOSE 8000
+# Make Cloud Run's default port (8080) available to the outside world
+EXPOSE 8080
 
 # Run the uvicorn server when the container launches
 # Use 0.0.0.0 to bind to all network interfaces
 # The --port is set to 8000, which matches the EXPOSE instruction
-ENV PORT 8080
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "$PORT"]
+ENV PORT=8080
+
+# Cloud Run injects the desired port through the PORT env var. Because the
+# JSON form of CMD does not expand shell variables, run uvicorn through sh so
+# the PORT value is honored both locally and on Cloud Run.
+CMD ["/bin/sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
