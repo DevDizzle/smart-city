@@ -1,25 +1,20 @@
 import os
 import json
-import google.generativeai as genai
 from typing import Optional, Dict, Any
 
+from google import genai
+from google.genai import types
+
 class GeminiClient:
-    """
-    A client for interacting with the Google Gemini API using the google-generativeai library.
-    """
+    """Simple wrapper around the official google-genai client."""
+
     def __init__(self, model_name: str = "gemini-2.5-pro"):
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY environment variable not set.")
-        
-        # Configure the generative AI library with the API key
-        genai.configure(api_key=api_key)
-        
-        # Initialize the generative model
-        self.model = genai.GenerativeModel(
-            model_name,
-            generation_config={"response_mime_type": "application/json"}
-        )
+
+        # Instantiate a client per the official google-genai guidelines
+        self.client = genai.Client(api_key=api_key)
         self.model_name = model_name
 
     def generate_content(self, prompt: str, temperature: float = 0.7,
@@ -37,18 +32,16 @@ class GeminiClient:
             The generated text content, or None if an error occurs.
         """
         try:
-            generation_config = {
-                "temperature": temperature,
-            }
+            config_kwargs: Dict[str, Any] = {"temperature": temperature}
             if max_output_tokens is not None:
-                generation_config["max_output_tokens"] = max_output_tokens
+                config_kwargs["max_output_tokens"] = max_output_tokens
 
-            response = self.model.generate_content(
-                prompt,
-                generation_config=generation_config
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(**config_kwargs)
             )
-            # Access the text attribute of the first part of the first candidate
-            return response.candidates[0].text
+            return response.text
         except Exception as e:
             print(f"Error generating content with Gemini: {e}")
             return None
@@ -72,20 +65,24 @@ class GeminiClient:
         """
         # Instruct the model to return JSON and provide the schema as context.
         # The `response_mime_type` is a powerful feature for structured output.
-        full_prompt = f"{prompt}\n\nPlease respond in JSON format, adhering to the following schema:\n{json.dumps(schema, indent=2)}"
-        
+        full_prompt = (
+            f"{prompt}\n\n"
+            "Please respond in JSON format, adhering to the following schema:\n"
+            f"{json.dumps(schema, indent=2)}"
+        )
+
         try:
-            generation_config = {
-                "temperature": temperature,
-                "response_mime_type": "application/json", # Instruct model to return JSON
-            }
-            response = self.model.generate_content(
-                full_prompt,
-                generation_config=generation_config
+            config = types.GenerateContentConfig(
+                temperature=temperature,
+                response_mime_type="application/json",
             )
-            
-            # The response.text should directly contain the JSON string due to response_mime_type
-            json_content = response.candidates[0].text
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=full_prompt,
+                config=config,
+            )
+
+            json_content = response.text
             return json.loads(json_content)
         except Exception as e:
             print(f"Error generating structured content with Gemini: {e}")
