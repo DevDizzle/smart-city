@@ -67,7 +67,7 @@ def analyze(brief: ProjectBrief):
     if trace_id and db is not None:
         # Store the trace in Firestore
         trace_ref = db.collection("veritai_traces").document(trace_id)
-        trace_ref.set({"events": result.get("events", [])})
+        # trace_ref.set({"events": result.get("events", [])})
     # We don't want to return the events in the main response, just the trace_id
     result.pop("events", None)
     return result
