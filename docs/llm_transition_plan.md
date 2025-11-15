@@ -9,6 +9,7 @@ The objective is to replace or augment the current explicit, hardcoded `if`/`els
 1.  **Dependency Management:**
     *   Update the project's `requirements.txt` (or equivalent) to include `google-genai`.
     *   Ensure any legacy `google-generativeai` dependency is removed to prevent conflicts.
+    *   Follow the [Gemini best practices](https://ai.google.dev/gemini-api/docs/get-started/python) by configuring a `genai.Client` with the `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) environment variable.
 2.  **LLM Client Design (Conceptual):**
     *   Design a dedicated module (e.g., `src/veritai/llm_client.py`) to abstract interactions with the `google-genai` library.
     *   This client will provide a simplified interface for:
@@ -17,6 +18,7 @@ The objective is to replace or augment the current explicit, hardcoded `if`/`els
         *   Configuring model parameters like `temperature` and `max_output_tokens`.
         *   Implementing robust error handling, rate limiting, and retry logic.
     *   Consider leveraging `google-genai`'s function calling feature to enforce strict JSON schema adherence for structured outputs from the LLM.
+    *   Pass generation parameters via `google.genai.types.GenerateContentConfig` (including `response_mime_type="application/json"` when structured output is required) to ensure consistent behavior across SDK releases.
 
 ---
 

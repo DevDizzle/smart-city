@@ -16,7 +16,13 @@ app = FastAPI(
 
 # Initialize Firestore client
 from google.cloud import firestore
-db = firestore.Client()
+from google.auth.exceptions import DefaultCredentialsError
+
+try:
+    db = firestore.Client()
+except DefaultCredentialsError:
+    db = None
+    print("Firestore credentials not configured; trace persistence is disabled.")
 
 # CORS Middleware
 origins = [
@@ -58,7 +64,7 @@ def analyze(brief: ProjectBrief):
     """
     result = run_workflow(brief.model_dump())
     trace_id = result.get("trace_id")
-    if trace_id:
+    if trace_id and db is not None:
         # Store the trace in Firestore
         trace_ref = db.collection("veritai_traces").document(trace_id)
         trace_ref.set({"events": result.get("events", [])})
@@ -71,6 +77,9 @@ def get_trace(trace_id: str):
     """
     Retrieves the protocol events for a given trace ID.
     """
+    if db is None:
+        raise HTTPException(status_code=503, detail="Trace persistence not configured")
+
     trace_ref = db.collection("veritai_traces").document(trace_id)
     trace = trace_ref.get()
     if trace.exists:
