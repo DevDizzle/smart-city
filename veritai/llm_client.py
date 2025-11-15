@@ -1,93 +1,92 @@
-"""Gemini LLM client abstraction for VeritAI agents."""
-from __future__ import annotations
-
-import json
-import logging
 import os
-from typing import Any, Dict, Optional
-
-from google import genai
-from google.genai import types as genai_types
-
-logger = logging.getLogger(__name__)
-
+import json
+import google.generativeai as genai
+from typing import Optional, Dict, Any
 
 class GeminiClient:
-    """Thin wrapper around the `google-genai` SDK with JSON schema support."""
-
-    def __init__(
-        self,
-        model: str = "gemini-2.5-pro",
-        temperature: float = 0.4,
-        max_output_tokens: int = 2048,
-    ) -> None:
-        api_key = os.getenv("GOOGLE_API_KEY")
+    """
+    A client for interacting with the Google Gemini API using the google-generativeai library.
+    """
+    def __init__(self, model_name: str = "gemini-2.5-pro"):
+        api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
-            logger.warning("GOOGLE_API_KEY is not set; GeminiClient will be a no-op")
-            self._client = None
-        else:
-            self._client = genai.Client(api_key=api_key)
-        self._model = model
-        self._temperature = temperature
-        self._max_output_tokens = max_output_tokens
+            raise ValueError("GEMINI_API_KEY environment variable not set.")
+        
+        # Configure the generative AI library with the API key
+        genai.configure(api_key=api_key)
+        
+        # Initialize the generative model
+        self.model = genai.GenerativeModel(
+            model_name,
+            generation_config={"response_mime_type": "application/json"}
+        )
+        self.model_name = model_name
 
-    def generate_structured_content(
-        self,
-        prompt: str,
-        schema: Optional[Dict[str, Any]] = None,
-        *,
-        temperature: Optional[float] = None,
-        max_output_tokens: Optional[int] = None,
-    ) -> Optional[Dict[str, Any]]:
-        """Generate structured JSON adhering to the provided schema.
-
-        Returns the parsed JSON response or ``None`` if parsing fails.
+    def generate_content(self, prompt: str, temperature: float = 0.7,
+                         max_output_tokens: Optional[int] = None) -> Optional[str]:
         """
+        Generates text content using the configured Gemini model.
 
-        if self._client is None:
-            logger.warning("GeminiClient is not configured; returning no response")
-            return None
+        Args:
+            prompt: The prompt string to send to the model.
+            temperature: Controls the randomness of the output. Lower values
+                         mean less random outputs.
+            max_output_tokens: The maximum number of tokens to generate.
 
+        Returns:
+            The generated text content, or None if an error occurs.
+        """
         try:
-            config_kwargs: Dict[str, Any] = {
-                "temperature": temperature if temperature is not None else self._temperature,
-                "max_output_tokens": max_output_tokens
-                if max_output_tokens is not None
-                else self._max_output_tokens,
+            generation_config = {
+                "temperature": temperature,
             }
+            if max_output_tokens is not None:
+                generation_config["max_output_tokens"] = max_output_tokens
 
-            if schema:
-                config_kwargs["response_mime_type"] = "application/json"
-                config_kwargs["response_schema"] = self._to_schema(schema)
-
-            response = self._client.responses.generate(
-                model=self._model,
-                contents=[prompt],
-                config=genai_types.GenerateContentConfig(**config_kwargs),
+            response = self.model.generate_content(
+                prompt,
+                generation_config=generation_config
             )
-        except Exception:  # pragma: no cover - network/runtime failures
-            logger.exception("Gemini content generation failed")
+            # Access the text attribute of the first part of the first candidate
+            return response.candidates[0].text
+        except Exception as e:
+            print(f"Error generating content with Gemini: {e}")
             return None
 
-        text = getattr(response, "output_text", None)
-        if not text:
-            logger.warning("Gemini response missing output text")
-            return None
+    def generate_structured_content(self, prompt: str, schema: Dict[str, Any],
+                                    temperature: float = 0.7) -> Optional[Dict[str, Any]]:
+        """
+        Generates structured content (JSON) using the configured Gemini model.
+        This method instructs the model to return JSON and attempts to parse it.
+        For more robust schema enforcement, google-genai's tool_code feature
+        would be used, but for this initial implementation, we rely on prompt
+        instruction and parsing.
 
+        Args:
+            prompt: The prompt string to send to the model.
+            schema: A dictionary representing the JSON schema for the desired output.
+            temperature: Controls the randomness of the output.
+
+        Returns:
+            A dictionary representing the generated structured content, or None if an error occurs.
+        """
+        # Instruct the model to return JSON and provide the schema as context.
+        # The `response_mime_type` is a powerful feature for structured output.
+        full_prompt = f"{prompt}\n\nPlease respond in JSON format, adhering to the following schema:\n{json.dumps(schema, indent=2)}"
+        
         try:
-            return json.loads(text)
-        except json.JSONDecodeError:  # pragma: no cover - unexpected model output
-            logger.exception("Failed to parse Gemini response as JSON")
+            generation_config = {
+                "temperature": temperature,
+                "response_mime_type": "application/json", # Instruct model to return JSON
+            }
+            response = self.model.generate_content(
+                full_prompt,
+                generation_config=generation_config
+            )
+            
+            # The response.text should directly contain the JSON string due to response_mime_type
+            json_content = response.candidates[0].text
+            return json.loads(json_content)
+        except Exception as e:
+            print(f"Error generating structured content with Gemini: {e}")
             return None
-
-    @staticmethod
-    def _to_schema(schema_dict: Dict[str, Any]) -> genai_types.Schema:
-        """Convert a JSON schema dictionary into the SDK Schema object."""
-        if isinstance(schema_dict, genai_types.Schema):
-            return schema_dict
-
-        # The Schema dataclass expects native Python structures. Using recursion
-        # via json ensures complex nested structures remain compatible.
-        payload = json.loads(json.dumps(schema_dict))
-        return genai_types.Schema(**payload)
-

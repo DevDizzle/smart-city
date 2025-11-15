@@ -1,19 +1,20 @@
 """
 VeritAI Smart-City Use Case: Orchestration Graph
 """
+import os
 import uuid
 import json
 import logging
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
-from ..agents.public_safety import PublicSafetySpecialist
-from ..agents.privacy import PrivacyCounsel
-from ..agents.ot_security import OT_SecurityEngineer
-from ..protocol.critic import Critic
-from ..protocol.validator import Validator
-from ..protocol.events import ProtocolEvent
-from ..schemas.decision_brief import DecisionBrief
+from agents.public_safety import PublicSafetySpecialist
+from agents.privacy import PrivacyCounsel
+from agents.ot_security import OT_SecurityEngineer
+from protocol.critic import Critic
+from protocol.validator import Validator
+from protocol.events import ProtocolEvent
+from schemas.decision_brief import DecisionBrief
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -52,6 +53,16 @@ def run_workflow(project_brief: dict) -> dict:
     log_event("public_safety", "PublicSafetySpecialist", {"project_brief": project_brief}, public_safety_finding.model_dump())
     log_event("privacy", "PrivacyCounsel", {"project_brief": project_brief}, privacy_finding.model_dump())
     log_event("ot_security", "OT_SecurityEngineer", {"project_brief": project_brief}, ot_security_finding.model_dump())
+
+    # Save each agent's finding to a file
+    output_dir = "agent_outputs"
+    os.makedirs(output_dir, exist_ok=True)
+    with open(os.path.join(output_dir, "public_safety_finding.json"), "w") as f:
+        json.dump(public_safety_finding.model_dump(), f, indent=2)
+    with open(os.path.join(output_dir, "privacy_finding.json"), "w") as f:
+        json.dump(privacy_finding.model_dump(), f, indent=2)
+    with open(os.path.join(output_dir, "ot_security_finding.json"), "w") as f:
+        json.dump(ot_security_finding.model_dump(), f, indent=2)
 
     findings = {
         "public_safety": public_safety_finding,

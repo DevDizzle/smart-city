@@ -6,7 +6,7 @@ Smart-City Deployments" use case. These rules are built using the core
 ProtocolRule class from the veritai-core layer.
 """
 
-from veritai-core.protocol.rules import ProtocolRule, Severity
+from veritai.protocol.rules import ProtocolRule, Severity
 
 # ============================================================================
 # Smart-City Governance Rules

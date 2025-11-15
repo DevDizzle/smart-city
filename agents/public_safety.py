@@ -3,9 +3,9 @@ VeritAI Smart-City Use Case: Public Safety Specialist Agent
 """
 import json
 from veritai.llm_client import GeminiClient
-from ..rag.vertex_search import search_app, Doc
-from ..schemas.common import Evidence, Risk, Requirement
-from ..schemas.public_safety import PublicSafetyFinding
+from rag.vertex_search import search_app, Doc
+from schemas.common import Evidence, Risk, Requirement
+from schemas.public_safety import PublicSafetyFinding
 
 # Define JSON schemas for LLM output
 RISK_SCHEMA = {
@@ -72,18 +72,14 @@ class PublicSafetySpecialist:
         Returns:
             A PublicSafetyFinding object.
         """
-        # Extract keywords for KB search
-        sensors_dict = project_brief.get("sensors", {})
-        enabled_sensors = [sensor for sensor, enabled in sensors_dict.items() if enabled]
-        vendor_hints = project_brief.get("vendor_hints", [])
-        query_parts = enabled_sensors + vendor_hints
-        query = " ".join(query_parts)
-
-        # Augment query with core public safety topics
-        if "alpr" in query:
-            query += " CJIS ALPR handling"
-        if "video" in query or "audio" in query:
-            query += " Sunshine Law video retention notice"
+        # Construct a detailed query for the knowledge base search
+        query = f"""
+        Public safety implications of a project with the following characteristics:
+        Corridors: {", ".join(project_brief.get("corridors", []))}
+        Sensors: {", ".join([sensor for sensor, enabled in project_brief.get("sensors", {}).items() if enabled])}
+        Storage: {project_brief.get("storage", "Not specified")}
+        Vendor Hints: {", ".join(project_brief.get("vendor_hints", []))}
+        """
         
         # Search the knowledge base
         retrieved_docs: list[Doc] = search_app(query=query, top_k=5)
@@ -100,9 +96,20 @@ class PublicSafetySpecialist:
 
         # Use LLM to identify risks
         risks_prompt = f"""
-        Given the following project brief and retrieved evidence, identify potential public safety risks.
-        Project Brief: {json.dumps(project_brief, indent=2)}
-        Evidence: {json.dumps([e.model_dump() for e in evidence], indent=2)}
+        You are a public safety specialist. Your task is to identify potential public safety risks based on a project brief and a set of evidence documents.
+
+        **Project Brief:**
+        {json.dumps(project_brief, indent=2)}
+
+        **Evidence Documents:**
+        {json.dumps([e.model_dump() for e in evidence], indent=2)}
+
+        **Instructions:**
+        1.  Carefully review the project brief and each piece of evidence.
+        2.  For each piece of evidence, consider its implications for the project described in the brief.
+        3.  Identify potential public safety risks that arise from the project, based on the evidence. A risk is a potential for harm or loss.
+        4.  For each risk, provide a clear description, a severity level (High, Medium, or Low), and a suggested mitigation.
+        5.  If you do not identify any risks, return an empty list.
 
         Please output a list of risks in JSON format.
         """
@@ -112,9 +119,22 @@ class PublicSafetySpecialist:
 
         # Use LLM to identify requirements
         requirements_prompt = f"""
-        Given the following project brief and identified risks, identify necessary public safety requirements.
-        Project Brief: {json.dumps(project_brief, indent=2)}
-        Identified Risks: {json.dumps([r.model_dump() for r in risks], indent=2)}
+        You are a public safety specialist. Your task is to identify necessary public safety requirements based on a project brief, a set of evidence documents, and a list of identified risks.
+
+        **Project Brief:**
+        {json.dumps(project_brief, indent=2)}
+
+        **Evidence Documents:**
+        {json.dumps([e.model_dump() for e in evidence], indent=2)}
+
+        **Identified Risks:**
+        {json.dumps([r.model_dump() for r in risks], indent=2)}
+
+        **Instructions:**
+        1.  Carefully review the project brief, the evidence, and the identified risks.
+        2.  Based on all of this information, identify any necessary public safety requirements. A requirement is a specific action or control that must be implemented to ensure public safety and compliance.
+        3.  For each requirement, provide a clear description and indicate if it is already met by the project as described in the brief.
+        4.  If you do not identify any requirements, return an empty list.
 
         Please output a list of requirements in JSON format.
         """

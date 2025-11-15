@@ -19,7 +19,7 @@ kb.health:
 # ============================================================================
 run.api:
 	@echo "Starting API server locally..."
-	@uvicorn smart-city.api.main:app --reload --app-dir ..
+	@uvicorn api.main:app --reload
 
 deploy.api:
 	@echo "Deploying API to Cloud Run..."

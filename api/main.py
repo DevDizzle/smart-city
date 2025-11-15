@@ -3,19 +3,10 @@ VeritAI Smart-City Use Case: FastAPI API
 """
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from ..orchestration.graph import run_workflow
-from ..rag.vertex_search import search_app
-from typing import Dict, List
-from ..protocol.events import ProtocolEvent
-
-app = FastAPI(
-    title="VeritAI Smart-City API",
-    description="API for the VeritAI Smart-City use case.",
-    version="0.1.0",
-)
-
-from google.cloud import firestore
-from ..protocol.events import ProtocolEvent
+from orchestration.graph import run_workflow
+from rag.vertex_search import search_app
+from protocol.events import ProtocolEvent
+from fastapi.middleware.cors import CORSMiddleware # Added CORS import
 
 app = FastAPI(
     title="VeritAI Smart-City API",
@@ -24,7 +15,23 @@ app = FastAPI(
 )
 
 # Initialize Firestore client
+from google.cloud import firestore
 db = firestore.Client()
+
+# CORS Middleware
+origins = [
+    "http://localhost:3000",  # For local development
+    "https://3000-cs-832847987222-default.cs-us-east1-yeah.cloudshell.dev", # Your Cloud Shell frontend URL
+    # Add other frontend origins if necessary
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class ProjectBrief(BaseModel):
     """Pydantic model for the project brief."""
