@@ -1,8 +1,8 @@
 """
-VeritAI Smart-City Use Case: Vertex AI Search Setup
+UrbanNexus Smart-City Use Case: Vertex AI Search Setup
 
 This script programmatically creates the necessary Vertex AI Search resources
-(Data Stores and a Search App) for the VeritAI project.
+(Data Stores and a Search App) for the UrbanNexus project.
 
 This is part of Step D in the project plan.
 """
@@ -22,15 +22,15 @@ PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
 LOCATION = "global"  # The location for Vertex AI Search resources.
 COLLECTION_ID = "default_collection" # The default collection for data stores.
 
-ENGINE_ID = "veritai-smart-city-engine"
-ENGINE_DISPLAY_NAME = "VeritAI Smart City Engine"
+ENGINE_ID = "urbannexus-smart-city-engine"
+ENGINE_DISPLAY_NAME = "UrbanNexus Smart City Engine"
 
 # A list of the data stores we need to create.
 DATA_STORES_TO_CREATE = [
     {
-        "id": "veritai-smart-city-kb-ds",
-        "display_name": "VeritAI Smart City Knowledge Base",
-        "gcs_path": "gs://veritai-smart-city-kb/",
+        "id": "urbannexus-smart-city-kb-ds",
+        "display_name": "UrbanNexus Smart City Knowledge Base",
+        "gcs_path": "gs://urbannexus-smart-city-kb/",
     },
 ]
 

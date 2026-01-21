@@ -50,7 +50,7 @@ class ProtocolCheckpoint(BaseModel):
 
 
 class Checkpoints:
-    """VeritAI-PS Standard Checkpoints"""
+    """UrbanNexus-PS Standard Checkpoints"""
     
     CRITIC_GATE = ProtocolCheckpoint(
         checkpoint_id="CRITIC_GATE",

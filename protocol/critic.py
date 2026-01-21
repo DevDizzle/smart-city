@@ -1,8 +1,8 @@
 """
-VeritAI Core Protocol: Critic Agent
+UrbanNexus Core Protocol: Critic Agent
 """
 import json
-from veritai.llm_client import GeminiClient
+from urbannexus.llm_client import GeminiClient
 from schemas.public_safety import PublicSafetyFinding
 
 # Define JSON schema for Critic's output

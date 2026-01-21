@@ -1,6 +1,6 @@
 # Sprint 5 – Demo UX, Human Review Signal, and Runbook
 
-**Goal:** Make the VeritAI smart-city MVP easy to demo, easy to understand, and easy for another engineer to deploy and test.
+**Goal:** Make the UrbanNexus smart-city MVP easy to demo, easy to understand, and easy for another engineer to deploy and test.
 
 **Assumption:**
 Sprints 1–4 are complete and `/analyze` returns a structured `DecisionBrief` with a `trace_id`.
@@ -105,7 +105,7 @@ Each scenario should include:
 Create docs/Runbook_MVP.md with:
 
 #### Overview
-Short description of the MVP: “VeritAI evaluates smart-streetlight AI deployments and returns GO / MITIGATE / HOLD with an audit trace.”
+Short description of the MVP: “UrbanNexus evaluates smart-streetlight AI deployments and returns GO / MITIGATE / HOLD with an audit trace.”
 
 #### Prerequisites
 Google Cloud project with:

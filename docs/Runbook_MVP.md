@@ -1,14 +1,14 @@
-# VeritAI MVP Runbook
+# UrbanNexus MVP Runbook
 
 ## Overview
-VeritAI evaluates smart-streetlight AI deployments and returns GO / MITIGATE / HOLD with an audit trace.
+UrbanNexus evaluates smart-streetlight AI deployments and returns GO / MITIGATE / HOLD with an audit trace.
 
 ## Prerequisites
 - Google Cloud project with the following enabled:
   - Vertex AI Search
   - Cloud Run
   - BigQuery
-- A BigQuery dataset named `veritai_audit` for protocol events.
+- A BigQuery dataset named `urbannexus_audit` for protocol events.
 - A service account with permissions for Vertex AI Search and BigQuery.
 
 ## Configuration
@@ -20,7 +20,7 @@ To deploy the API to Cloud Run, run the following command from the `smart-city` 
 ```bash
 make deploy.api
 ```
-This will create a Cloud Run service named `veritai-smart-city-api`.
+This will create a Cloud Run service named `urbannexus-smart-city-api`.
 
 ## Smoke Tests
 1.  **Check Knowledge Base Health:**
@@ -57,13 +57,13 @@ This will create a Cloud Run service named `veritai-smart-city-api`.
 
 ## Querying Logs in BigQuery
 
-To query the protocol events in BigQuery, you can use the following SQL query. Make sure to replace `your-project-id`, `veritai_audit`, and `protocol_events_table` with your actual project ID, dataset, and table names.
+To query the protocol events in BigQuery, you can use the following SQL query. Make sure to replace `your-project-id`, `urbannexus_audit`, and `protocol_events_table` with your actual project ID, dataset, and table names.
 
 ```sql
 SELECT
   *
 FROM
-  `your-project-id.veritai_audit.protocol_events_table`
+  `your-project-id.urbannexus_audit.protocol_events_table`
 WHERE
   jsonPayload.session_id = "your-trace-id"
 ORDER BY

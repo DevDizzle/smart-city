@@ -1,5 +1,5 @@
 """
-VeritAI Smart-City Use Case: RAG Configuration
+UrbanNexus Smart-City Use Case: RAG Configuration
 
 This module contains the configuration for the Retrieval-Augmented Generation
 (RAG) pipeline, which uses Google Cloud's Vertex AI Search and

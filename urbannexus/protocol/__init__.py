@@ -1,7 +1,7 @@
 """
-VeritAI Protocol Engineering Layer
+UrbanNexus Protocol Engineering Layer
 
-This module defines the VeritAI Protocol Specification (VeritAI-PS)
+This module defines the UrbanNexus Protocol Specification (UrbanNexus-PS)
 for governed multi-agent reasoning systems.
 """
 

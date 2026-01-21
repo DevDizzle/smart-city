@@ -1,5 +1,5 @@
 """
-VeritAI Smart-City Use Case: OT Security Specialist Schemas
+UrbanNexus Smart-City Use Case: OT Security Specialist Schemas
 """
 from pydantic import BaseModel, Field
 from typing import List, Optional

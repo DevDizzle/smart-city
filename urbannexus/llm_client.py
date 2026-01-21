@@ -8,13 +8,19 @@ from google.genai import types
 class GeminiClient:
     """Simple wrapper around the official google-genai client."""
 
-    def __init__(self, model_name: str = "gemini-2.5-pro"):
+    def __init__(self, model_name: str = "gemini-3-flash-preview"):
         api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            raise ValueError("GEMINI_API_KEY environment variable not set.")
+        project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+        location = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
 
-        # Instantiate a client per the official google-genai guidelines
-        self.client = genai.Client(api_key=api_key)
+        if api_key:
+            self.client = genai.Client(api_key=api_key)
+        elif project_id:
+            print(f"Using Vertex AI with project {project_id} in {location}")
+            self.client = genai.Client(vertexai=True, project=project_id, location=location)
+        else:
+            raise ValueError("GEMINI_API_KEY or GOOGLE_CLOUD_PROJECT environment variable not set.")
+
         self.model_name = model_name
 
     def generate_content(self, prompt: str, temperature: float = 0.7,

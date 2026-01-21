@@ -1,12 +1,12 @@
 """
-VeritAI Smart-City Use Case: Governance Rules
+UrbanNexus Smart-City Use Case: Governance Rules
 
 This module defines the specific governance rules for the "Go/No-Go for
 Smart-City Deployments" use case. These rules are built using the core
-ProtocolRule class from the veritai-core layer.
+ProtocolRule class from the urbannexus-core layer.
 """
 
-from veritai.protocol.rules import ProtocolRule, Severity
+from urbannexus.protocol.rules import ProtocolRule, Severity
 
 # ============================================================================
 # Smart-City Governance Rules

@@ -1,0 +1,42 @@
+{
+  "zones": [
+    {
+      "zone_id": "eng_lab_parking",
+      "name": "Engineering Lab Parking",
+      "description": "Large surface parking lot adjacent to the Engineering West building. High student foot traffic during class changes.",
+      "attributes": {
+        "pole_density": "high",
+        "pole_height": "30ft",
+        "power_type": "switched",
+        "backhaul_availability": "fiber",
+        "crime_rate": "medium",
+        "pedestrian_traffic": "high"
+      },
+      "coordinates": [
+        [26.373, -80.101],
+        [26.374, -80.101],
+        [26.374, -80.100],
+        [26.373, -80.100]
+      ]
+    },
+    {
+      "zone_id": "campus_walkway",
+      "name": "Library Walkway",
+      "description": "Main pedestrian corridor connecting the Library to the Student Union. Key gathering spot.",
+      "attributes": {
+        "pole_density": "medium",
+        "pole_height": "15ft",
+        "power_type": "continuous",
+        "backhaul_availability": "none",
+        "crime_rate": "low",
+        "pedestrian_traffic": "very_high"
+      },
+      "coordinates": [
+        [26.370, -80.1022],
+        [26.3715, -80.1022],
+        [26.3715, -80.1018],
+        [26.370, -80.1018]
+      ]
+    }
+  ]
+}

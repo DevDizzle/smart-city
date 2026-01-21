@@ -34,12 +34,12 @@ class ProtocolEvent(BaseModel):
 
 class ProtocolTrace(BaseModel):
     """
-    Complete audit trail for a VeritAI decision session
+    Complete audit trail for a UrbanNexus decision session
     
-    Exportable in standard VeritAI-PS format for interoperability.
+    Exportable in standard UrbanNexus-PS format for interoperability.
     """
     trace_id: str = Field(description="Unique trace identifier")
-    protocol_version: str = Field(default="VeritAI-PS-1.0")
+    protocol_version: str = Field(default="UrbanNexus-PS-1.0")
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     proposal: str = Field(description="Original proposal analyzed")
     events: List[ProtocolEvent] = Field(default_factory=list)
@@ -51,7 +51,7 @@ class ProtocolTrace(BaseModel):
     
     def export_standard_format(self) -> dict:
         """
-        Export in VeritAI Protocol Standard format
+        Export in UrbanNexus Protocol Standard format
         
         This format is designed for:
         - Cross-system interoperability
@@ -59,7 +59,7 @@ class ProtocolTrace(BaseModel):
         - External audit tools
         """
         return {
-            "protocol": "VeritAI-PS",
+            "protocol": "UrbanNexus-PS",
             "version": self.protocol_version,
             "trace_id": self.trace_id,
             "created_at": self.created_at,

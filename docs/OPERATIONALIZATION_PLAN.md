@@ -1,26 +1,26 @@
-# VeritAI Smart-City Operationalization Plan
+# UrbanNexus Smart-City Operationalization Plan
 
-This document outlines the plan for operationalizing the VeritAI Smart-City demo, including the deployment of the analysis service and the development of a web-based UI.
+This document outlines the plan for operationalizing the UrbanNexus Smart-City demo, including the deployment of the analysis service and the development of a web-based UI.
 
 ## 1. Service Deployment
 
 The core analysis service is implemented as a FastAPI application and deployed as a containerized service on Google Cloud Run.
 
 - **Endpoint:** `/analyze`
-- **URL:** `https://veritai-smart-city-r5uzf6jgla-uc.a.run.app`
+- **URL:** `https://urbannexus-smart-city-r5uzf6jgla-uc.a.run.app`
 - **Deployment:** The service is deployed from a Docker container, managed by Google Cloud Run.
 
 ## 2. Frontend Development (Firebase Studio)
 
-A modern, sharp, and intuitive web application will be developed using Firebase Studio to demonstrate the VeritAI framework.
+A modern, sharp, and intuitive web application will be developed using Firebase Studio to demonstrate the UrbanNexus framework.
 
 ### Firebase Studio Prompt
 
 **Objective:**
 
-Create a modern, sharp, and intuitive web application to demonstrate the VeritAI framework applied to a smart-city scenario. The application will allow users to input a project brief, submit it to a VeritAI service for analysis, and visualize the results and the decision-making process.
+Create a modern, sharp, and intuitive web application to demonstrate the UrbanNexus framework applied to a smart-city scenario. The application will allow users to input a project brief, submit it to a UrbanNexus service for analysis, and visualize the results and the decision-making process.
 
-**Application Name:** VeritAI Smart-City Decision Hub
+**Application Name:** UrbanNexus Smart-City Decision Hub
 
 **Key Features:**
 
@@ -34,7 +34,7 @@ Create a modern, sharp, and intuitive web application to demonstrate the VeritAI
     *   A "Submit for Analysis" button.
 
 2.  **Analysis Results Display:**
-    *   After submitting the brief, the UI should display the analysis results returned from the VeritAI service.
+    *   After submitting the brief, the UI should display the analysis results returned from the UrbanNexus service.
     *   The results will include:
         *   `decision`: The final decision (e.g., "Approved", "Rejected").
         *   `summary`: A summary of the decision.
@@ -51,10 +51,10 @@ Create a modern, sharp, and intuitive web application to demonstrate the VeritAI
 
 *   **Backend:** Use Firestore to store the analysis results and traces.
 *   **API Integration:**
-    *   When the user submits the project brief, the backend should make a POST request to the following endpoint: `https://veritai-smart-city-r5uzf6jgla-uc.a.run.app/analyze`
+    *   When the user submits the project brief, the backend should make a POST request to the following endpoint: `https://urbannexus-smart-city-r5uzf6jgla-uc.a.run.app/analyze`
     *   The request body should be a JSON object with the project brief.
-    *   The backend should store the response from the VeritAI service in Firestore.
-    *   The backend should also fetch the trace data from the VeritAI service using the `trace_id` and the `/trace/{trace_id}` endpoint, and store it in Firestore.
+    *   The backend should store the response from the UrbanNexus service in Firestore.
+    *   The backend should also fetch the trace data from the UrbanNexus service using the `trace_id` and the `/trace/{trace_id}` endpoint, and store it in Firestore.
 
 **Styling and UI/UX:**
 

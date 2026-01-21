@@ -23,7 +23,7 @@ run.api:
 
 deploy.api:
 	@echo "Deploying API to Cloud Run..."
-	@gcloud run deploy veritai-smart-city-api \
+	@gcloud run deploy urbannexus-smart-city-api \
 		--source . \
 		--region us-central1 \
 		--allow-unauthenticated \

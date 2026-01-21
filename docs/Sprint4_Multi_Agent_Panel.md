@@ -22,7 +22,7 @@
 
 ### 2.1 Schemas for multi-agent findings and decision brief
 
-Location: `veritai-core/schemas/`
+Location: `urbannexus-core/schemas/`
 
 Add or extend:
 
@@ -133,7 +133,7 @@ Tests:
 
 ### 2.4 Updated ADK graph and synthesis step
 
-Location: `veritai-core/orchestration/graph.py` and `veritai-core/orchestration/synthesis.py`
+Location: `urbannexus-core/orchestration/graph.py` and `urbannexus-core/orchestration/synthesis.py`
 
 Changes:
 

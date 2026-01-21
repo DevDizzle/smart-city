@@ -1,8 +1,8 @@
 """
-VeritAI Core Protocol: Validator Agent
+UrbanNexus Core Protocol: Validator Agent
 """
 import json
-from veritai.llm_client import GeminiClient
+from urbannexus.llm_client import GeminiClient
 from schemas.public_safety import PublicSafetyFinding
 from rules.rules import SmartCityRules, ProtocolRule # Assuming this import path for ProtocolRule
 

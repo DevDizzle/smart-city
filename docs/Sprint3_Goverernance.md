@@ -19,7 +19,7 @@
 
 ### 2.1 Critic logic (quality gate)
 
-Location: `veritai-core/protocol/critic.py` (or equivalent)
+Location: `urbannexus-core/protocol/critic.py` (or equivalent)
 
 Responsibilities:
 
@@ -60,7 +60,7 @@ Update tests:
 
 ### 2.2 Validator logic (hard governance gate)
 
-Location: `veritai-core/protocol/validator.py` (or equivalent)
+Location: `urbannexus-core/protocol/validator.py` (or equivalent)
 
 Responsibilities:
 
@@ -103,7 +103,7 @@ Tests:
 
 ### 2.3 ProtocolEvent trace and logging
 
-Location: `veritai-core/protocol/events.py`, integrated into graph
+Location: `urbannexus-core/protocol/events.py`, integrated into graph
 
 Create a `ProtocolEvent` model with fields:
 
@@ -119,7 +119,7 @@ For each graph node:
 
 - Instantiate a `ProtocolEvent`.
 - Log as JSON using Python `logging` with a consistent label, for example:
-  - `logger.info(json.dumps(protocol_event), extra={"veritai_protocol_event": True})`
+  - `logger.info(json.dumps(protocol_event), extra={"urbannexus_protocol_event": True})`
 
 Add a `trace_id` that is shared across all events for a single `/analyze` call. Return this `trace_id` in the API response.
 
@@ -131,10 +131,10 @@ While this is mostly infra, we can document expected setup:
 
 - Cloud Run service is already producing logs.
 - Create:
-  - A BigQuery dataset named, for example, `veritai_audit`.
+  - A BigQuery dataset named, for example, `urbannexus_audit`.
   - A table for protocol events, or let the logging sink auto-create it.
 - Create a logging sink that:
-  - Filters for entries where `veritai_protocol_event` is true.
+  - Filters for entries where `urbannexus_protocol_event` is true.
   - Writes them into the BigQuery dataset.
 
 Add a short how-to in `docs/Runbook_MVP.md` on how to query by `trace_id`.

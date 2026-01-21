@@ -1,8 +1,8 @@
-# Project Context: VeritAI (formerly PolyAI)
+# Project Context: UrbanNexus (formerly PolyAI)
 
 ## Governed Agentic Strategic Intelligence (AgSI)
 
-This document provides a comprehensive overview of the VeritAI system, synthesizing information from the detailed “PolyAI” hackathon proposal and the refined “VeritAI” concept summary. The purpose is to give our development team full context on the project’s architecture, goals, and technical implementation.
+This document provides a comprehensive overview of the UrbanNexus system, synthesizing information from the detailed “PolyAI” hackathon proposal and the refined “UrbanNexus” concept summary. The purpose is to give our development team full context on the project’s architecture, goals, and technical implementation.
 
 ---
 
@@ -11,20 +11,20 @@ This document provides a comprehensive overview of the VeritAI system, synthesiz
 ### Impact Statement  
 "AI makes million-dollar mistakes because there’s no second opinion. Companies are projected to waste $1.3T on failed AI by 2030. There is no verification for autonomous decisions. We built a system where multiple AIs debate, critique, and verify before deciding — with an audit trail."
 
-### About VeritAI  
-VeritAI is a **verification and governance layer** for autonomous AI systems. It is designed as a governed multi-agent reasoning system that serves as a foundational node in the emerging **Agentic AI Mesh**.  
+### About UrbanNexus  
+UrbanNexus is a **verification and governance layer** for autonomous AI systems. It is designed as a governed multi-agent reasoning system that serves as a foundational node in the emerging **Agentic AI Mesh**.  
 The core innovation is **Protocol Engineering**: using a defined protocol to make multi-agent decisions transparent, auditable, and trustworthy.  
-VeritAI orchestrates a network of specialized AI agents (e.g., financial, technical, ethical, risk analysts) through a shared blackboard memory and a structured verification protocol. This design ensures that autonomous AI decisions are **transparent, ethical, and verifiable by default**.
+UrbanNexus orchestrates a network of specialized AI agents (e.g., financial, technical, ethical, risk analysts) through a shared blackboard memory and a structured verification protocol. This design ensures that autonomous AI decisions are **transparent, ethical, and verifiable by default**.
 
 ### The Vision  
-The goal is to create the essential **infrastructure for the Agentic Era**, positioning VeritAI as the “TCP/IP of governed AI”. It addresses the urgent gap in AI safety by providing a trust layer that ensures autonomous actions are valid and aligned.
+The goal is to create the essential **infrastructure for the Agentic Era**, positioning UrbanNexus as the “TCP/IP of governed AI”. It addresses the urgent gap in AI safety by providing a trust layer that ensures autonomous actions are valid and aligned.
 
 ---
 
 ## 2. 💡 Core Concepts
 
 ### Governed Multi-Agent Reasoning  
-Unlike single-model “black-box” solvers, VeritAI orchestrates a **team of agents with built-in checks and balances**. Reasoning is modular, repeatable, and reviewable. This transforms autonomous “agents” into governed “civil servants,” each accountable for a specific duty.
+Unlike single-model “black-box” solvers, UrbanNexus orchestrates a **team of agents with built-in checks and balances**. Reasoning is modular, repeatable, and reviewable. This transforms autonomous “agents” into governed “civil servants,” each accountable for a specific duty.
 
 ### The “Veritas” Protocol  
 The entire system operates on a standardized, protocoled workflow:
@@ -48,7 +48,7 @@ This is the discipline of embedding governance logic directly into the agents’
 ### Agentic Strategic Intelligence (AgSI) & the Agentic Mesh  
 * **AgSI** is the vision of AI decision-making where agents perceive, reason, plan, act, and reflect on complex problems.  
 * The **Agentic Mesh** is the “Internet of Agents” connecting them.  
-* VeritAI (formerly PolyAI) positions itself as the **first governed intelligence node** in this mesh, acting as the trust and verification layer that all other agents can rely on.
+* UrbanNexus (formerly PolyAI) positions itself as the **first governed intelligence node** in this mesh, acting as the trust and verification layer that all other agents can rely on.
 
 ---
 
@@ -66,7 +66,7 @@ This is the discipline of embedding governance logic directly into the agents’
 
 ### A. Interface Layer (UI & API)  
 * **Web Application (UI):** A simple front-end where a user submits a “decision brief” (e.g., a proposal document). The UI presents the final result as a “Decision Summary Card” (e.g., “Do Not Proceed – 86% confidence”) and allows the user to expand a full, human-readable reasoning trace.  
-* **REST API:** A backend exposes endpoints (e.g., `/analyze`, `/trace/{id}`). This allows VeritAI to be integrated into other enterprise workflows (e.g., project management systems) as a “governance engine”.
+* **REST API:** A backend exposes endpoints (e.g., `/analyze`, `/trace/{id}`). This allows UrbanNexus to be integrated into other enterprise workflows (e.g., project management systems) as a “governance engine”.
 
 ### B. Orchestration Layer (Coordinator & Workflow Engine)  
 * **Core Tool:** An orchestration framework (e.g., ADK) to define the stateful agent workflow graph.  
@@ -129,20 +129,20 @@ This is the discipline of embedding governance logic directly into the agents’
 ### Key Use Cases  
 * **High-Stakes Decision Verification:** Decisions involving regulatory, financial, safety or reputational risk.  
 * **Idea-to-Innovation Pipeline:** Vetting product or R&D proposals for feasibility, risk and compliance.  
-* **Enterprise Governance Node:** Acting as a “trust checkpoint” for other autonomous agents (e.g., a marketing agent must pass through VeritAI before going live).  
+* **Enterprise Governance Node:** Acting as a “trust checkpoint” for other autonomous agents (e.g., a marketing agent must pass through UrbanNexus before going live).  
 * **Risk & Compliance Audits:** Specialist agents (Ethics, Legal, Security) pre-audit AI models or vendor bids against policy.
 
 ### Demo Plan  
 * **Live Replayable Trace (UI):** Show step-by-step reasoning including the Critic/Validator loop.  
 * **Adversarial Test Suite:** Run test cases to show the system catches known issues systematically.  
-* **Baseline Comparison:** Compare a single LLM output vs. VeritAI’s output; show “prevented loss” from flaw detection.
+* **Baseline Comparison:** Compare a single LLM output vs. UrbanNexus’s output; show “prevented loss” from flaw detection.
 
 ---
 
-## 8. 🏙️ VeritAI MVP Use Case: “Go/No-Go for Smart-City Deployments”
+## 8. 🏙️ UrbanNexus MVP Use Case: “Go/No-Go for Smart-City Deployments”
 
 ### Overview  
-This MVP focuses on **governed decision intelligence for city-scale AI infrastructure**—specifically, whether municipalities should proceed with deploying smart-streetlight or camera-enabled AI nodes (e.g., UbiHub AP/AI). The system applies VeritAI’s **Retrieve → Critique → Synthesize → Validate** protocol to ensure every deployment recommendation is transparent, compliant and defensible.
+This MVP focuses on **governed decision intelligence for city-scale AI infrastructure**—specifically, whether municipalities should proceed with deploying smart-streetlight or camera-enabled AI nodes (e.g., UbiHub AP/AI). The system applies UrbanNexus’s **Retrieve → Critique → Synthesize → Validate** protocol to ensure every deployment recommendation is transparent, compliant and defensible.
 
 ### Core Objective  
 Provide a **“Go / Go with Mitigations / Hold”** decision for smart-city projects that integrates:  
@@ -173,7 +173,7 @@ Provide a **“Go / Go with Mitigations / Hold”** decision for smart-city proj
 - **API Surface:** FastAPI endpoints (`/analyze`, `/trace/{id}`, `/kb/health`) for integration & UI
 
 ### Outcome  
-This use case demonstrates how VeritAI serves as a **governance layer for autonomous infrastructure decisions**, ensuring public-sector AI deployments meet safety, compliance and ethical standards before execution. It also establishes the foundation for future governed decision engines across other sectors (healthcare, finance, defense).
+This use case demonstrates how UrbanNexus serves as a **governance layer for autonomous infrastructure decisions**, ensuring public-sector AI deployments meet safety, compliance and ethical standards before execution. It also establishes the foundation for future governed decision engines across other sectors (healthcare, finance, defense).
 
 ---
 

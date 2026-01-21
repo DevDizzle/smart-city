@@ -1,5 +1,5 @@
 """
-VeritAI Smart-City Use Case: RAG Client
+UrbanNexus Smart-City Use Case: RAG Client
 
 This module contains the client for interacting with the RAG pipeline.
 It provides a simplified interface for querying the Vertex AI Search and
@@ -18,7 +18,7 @@ from . import config
 
 class RagClient:
     """
-    A client for retrieving context from the VeritAI knowledge base.
+    A client for retrieving context from the UrbanNexus knowledge base.
     """
 
     def __init__(self):

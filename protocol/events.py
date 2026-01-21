@@ -1,12 +1,12 @@
 """
-VeritAI Core Protocol: Event Schemas
+UrbanNexus Core Protocol: Event Schemas
 """
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
 
 class ProtocolEvent(BaseModel):
     """
-    Represents a single event in the VeritAI protocol.
+    Represents a single event in the UrbanNexus protocol.
     """
     session_id: str = Field(..., description="The unique identifier for the entire session.")
     step: str = Field(..., description="The step in the protocol (e.g., 'retrieve', 'public_safety', 'critic').")

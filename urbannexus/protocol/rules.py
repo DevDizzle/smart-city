@@ -70,7 +70,7 @@ class ProtocolRule(BaseModel):
 
 class GovernanceRules:
     """
-    VeritAI-PS Standard Governance Rules
+    UrbanNexus-PS Standard Governance Rules
     
     These rules define the governed behavior of the system.
     """

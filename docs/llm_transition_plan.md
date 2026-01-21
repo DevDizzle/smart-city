@@ -1,4 +1,4 @@
-# Plan: Transitioning VeritAI to LLM-Powered Reasoning with `gemini-2.5-pro`
+# Plan: Transitioning UrbanNexus to LLM-Powered Reasoning with `gemini-2.5-pro`
 
 The objective is to replace or augment the current explicit, hardcoded `if`/`else` logic within the `Specialist`, `Critic`, and `Validator` agents with dynamic reasoning capabilities provided by the `gemini-2.5-pro` LLM. The existing `ProtocolRule` objects will serve as guiding principles or context for the LLM.
 
@@ -11,7 +11,7 @@ The objective is to replace or augment the current explicit, hardcoded `if`/`els
     *   Ensure any legacy `google-generativeai` dependency is removed to prevent conflicts.
     *   Follow the [Gemini best practices](https://ai.google.dev/gemini-api/docs/get-started/python) by configuring a `genai.Client` with the `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) environment variable.
 2.  **LLM Client Design (Conceptual):**
-    *   Design a dedicated module (e.g., `src/veritai/llm_client.py`) to abstract interactions with the `google-genai` library.
+    *   Design a dedicated module (e.g., `src/urbannexus/llm_client.py`) to abstract interactions with the `google-genai` library.
     *   This client will provide a simplified interface for:
         *   Sending prompts to the `gemini-2.5-pro` model.
         *   Handling various response formats, including structured outputs (e.g., JSON).

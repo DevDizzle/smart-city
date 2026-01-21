@@ -1,30 +1,53 @@
-# VeritAI Smart-City Use Case
+# UrbanNexus Smart City Platform
 
-This project is a demonstration of the VeritAI multi-agent decision-making system, built for the "Go/No-Go for Smart-City Deployments" use case.
+**UrbanNexus** is an intelligent infrastructure optimization engine designed to help city planners and administrators make data-driven decisions. It utilizes a multi-agent system to analyze urban zones, assess value propositions, identify risks, and synthesize strategic recommendations for smart city upgrades.
 
-## 🚀 Overview
+## Core Features
 
-VeritAI is a governed multi-agent reasoning system that evaluates the deployment of AI-powered smart-city infrastructure. It uses a panel of specialized AI agents to analyze a project brief and provide a "Go / Mitigate / Hold" recommendation with a full audit trail.
+-   **Multi-Agent Architecture:** Specialized agents for Connectivity, Site Viability, Sustainability, Public Safety, OT Security, and Privacy.
+-   **RAG-Powered Knowledge Base:** Retrieves and grounds decisions in real-world standards (NIST, CJIS, Sunshine Laws).
+-   **Interactive Dashboard:** Select zones, define goals (Safety, Energy, Connectivity), and view live agent reasoning.
+-   **Transparent Reasoning:** "Live Agent Trace" visualizes the step-by-step logic from assessment to final decision.
 
-This specific use case evaluates the deployment of smart streetlight nodes with sensors like ALPR, video, and audio, considering public safety, privacy, and security implications.
+## Project Structure
 
-## ✨ Features
+-   `urbannexus/`: Core Python package containing the multi-agent protocol and state management.
+-   `agents/`: Specialized agent implementations.
+-   `api/`: FastAPI backend service (`api/main.py`).
+-   `urbannexus-ui/`: Next.js frontend application.
+-   `orchestration/`: LangGraph workflow definitions.
+-   `rag/`: Vector search and document processing utilities.
 
-*   **Multi-Agent Analysis:** A panel of specialist agents (Public Safety, Privacy, and OT Security) analyze the project from different perspectives.
-*   **Retrieval-Augmented Generation (RAG):** Agents are grounded in a knowledge base of real-world policy documents, including NIST AI RMF, Florida Sunshine Law, and CJIS Security Policy.
-*   **Governance by Design:** A `Critic` and `Validator` agent review the specialists' findings to ensure quality and enforce governance gates.
-*   **Auditable Decisions:** Every step of the decision-making process is logged, and a unique `trace_id` is generated for each analysis.
-*   **FastAPI:** The application is exposed as a REST API using FastAPI.
+## Getting Started
 
-## 🛠️ How to Run
+### Backend (Cloud Run / Local)
 
 1.  **Install Dependencies:**
     ```bash
-    make install
+    pip install -r requirements.txt
     ```
-2.  **Run the API:**
+2.  **Run Locally:**
     ```bash
-    make run.api
+    uvicorn api.main:app --reload
     ```
-3.  **Test the API:**
-    Open your browser to `http://127.0.0.1:8000/docs` to access the FastAPI Swagger UI and test the `/analyze` endpoint.
+
+### Frontend (Next.js)
+
+1.  **Navigate to UI:**
+    ```bash
+    cd urbannexus-ui
+    ```
+2.  **Install & Run:**
+    ```bash
+    npm install
+    npm run dev
+    ```
+
+## Deployment
+
+The system is designed for Google Cloud Run.
+-   **Backend:** Deployed as a Python service.
+-   **Frontend:** Deployed as a Next.js standalone container.
+
+---
+*Powered by Google Gemini 1.5 Pro & Vertex AI*

@@ -1,5 +1,5 @@
 """
-VeritAI Protocol Schemas
+UrbanNexus Protocol Schemas
 
 Data structures for agent communication in the simplified 3-agent architecture.
 """

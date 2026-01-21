@@ -1,5 +1,5 @@
 """
-VeritAI Smart-City Use Case: Vertex AI Search Retrieval Tool
+UrbanNexus Smart-City Use Case: Vertex AI Search Retrieval Tool
 
 This script provides a function to query the Vertex AI Search App and retrieve
 relevant documents.

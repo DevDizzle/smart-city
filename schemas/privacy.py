@@ -1,5 +1,5 @@
 """
-VeritAI Smart-City Use Case: Privacy Specialist Schemas
+UrbanNexus Smart-City Use Case: Privacy Specialist Schemas
 """
 from pydantic import BaseModel, Field
 from typing import List, Optional

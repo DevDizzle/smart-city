@@ -1,5 +1,5 @@
 """
-VeritAI Smart-City Use Case: Document Conversion and Upload
+UrbanNexus Smart-City Use Case: Document Conversion and Upload
 
 This script downloads source documents (PDF, HTML), extracts text content,
 formats them into JSON Lines, and uploads them to a GCS bucket for Vertex AI Search ingestion.
@@ -14,16 +14,17 @@ from urllib.parse import urlparse
 import markdown
 import io
 from PyPDF2 import PdfReader
+import shutil
 
 # ============================================================================
 # Configuration
-# ============================================================================ 
+# ============================================================================
 
 # Your Google Cloud project ID.
 PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
 
 # GCS bucket for processed documents
-PROCESSED_GCS_BUCKET = "veritai-smart-city-kb"
+PROCESSED_GCS_BUCKET = "urbannexus-smart-city-kb"
 PROCESSED_GCS_FOLDER = "processed_docs"
 
 # Path to the corpus seed markdown file
@@ -32,13 +33,30 @@ CORPUS_SEED_FILE = os.path.join(os.path.dirname(__file__), "corpus_seed.md")
 # Local directory to store downloaded and processed files temporarily
 TEMP_DIR = "temp_processed_docs"
 
-# ============================================================================ 
+# ============================================================================
 # Helper Functions
-# ============================================================================ 
+# ============================================================================
 
 def download_file(url: str, local_path: str) -> bool:
     """Downloads a file from a URL to a local path."""
     url = url.strip('`') # Strip backticks
+
+    # Handle local files
+    if url.startswith("file://"):
+        source_path = url.replace("file://", "")
+        print(f"Copying local file {source_path} to {local_path}...")
+        try:
+            # Check if source path exists relative to current working directory
+            if not os.path.exists(source_path):
+                print(f"Error: Local file {source_path} not found.")
+                return False
+            shutil.copy(source_path, local_path)
+            print("Copy successful.")
+            return True
+        except Exception as e:
+            print(f"Error copying {source_path}: {e}")
+            return False
+
     print(f"Downloading {url} to {local_path}...")
     try:
         response = requests.get(url, stream=True)
@@ -110,15 +128,18 @@ def parse_corpus_seed(markdown_content: str) -> list[dict]:
 def upload_to_gcs(bucket_name: str, source_file_name: str, destination_blob_name: str):
     """Uploads a file to a GCS bucket."""
     print(f"Uploading {source_file_name} to gs://{bucket_name}/{destination_blob_name}...")
-    storage_client = storage.Client(project=PROJECT_ID)
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(destination_blob_name)
-    blob.upload_from_filename(source_file_name)
-    print(f"File {source_file_name} uploaded to {destination_blob_name}.")
+    try:
+        storage_client = storage.Client(project=PROJECT_ID)
+        bucket = storage_client.bucket(bucket_name)
+        blob = bucket.blob(destination_blob_name)
+        blob.upload_from_filename(source_file_name)
+        print(f"File {source_file_name} uploaded to {destination_blob_name}.")
+    except Exception as e:
+        print(f"Error uploading to GCS: {e}")
 
-# ============================================================================ 
+# ============================================================================
 # Main Execution
-# ============================================================================ 
+# ============================================================================
 
 def main():
     """

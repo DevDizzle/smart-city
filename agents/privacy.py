@@ -1,8 +1,8 @@
 """
-VeritAI Smart-City Use Case: Privacy Counsel Agent
+UrbanNexus Smart-City Use Case: Privacy Counsel Agent
 """
 import json
-from veritai.llm_client import GeminiClient
+from urbannexus.llm_client import GeminiClient
 from rag.vertex_search import search_app, Doc
 from schemas.common import Evidence, Risk, Requirement
 from schemas.privacy import PrivacyFinding

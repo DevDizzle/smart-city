@@ -1,5 +1,5 @@
 """
-VeritAI Smart-City Use Case: Vertex AI Search Document Import
+UrbanNexus Smart-City Use Case: Vertex AI Search Document Import
 
 This script imports documents from the GCS bucket into the Vertex AI Search data store.
 """
@@ -19,7 +19,7 @@ LOCATION = "global"  # The location for Vertex AI Search resources.
 COLLECTION_ID = "default_collection" # The default collection for data stores.
 
 # GCS bucket for processed documents
-PROCESSED_GCS_BUCKET = "veritai-smart-city-kb"
+PROCESSED_GCS_BUCKET = "urbannexus-smart-city-kb"
 PROCESSED_GCS_FOLDER = "processed_docs"
 
 # Path to the generated Vertex AI Search configuration file

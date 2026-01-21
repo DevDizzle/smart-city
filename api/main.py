@@ -1,20 +1,29 @@
 """
-VeritAI Smart-City Use Case: FastAPI API
+UrbanNexus Smart-City Use Case: FastAPI API (V2 Updated)
 """
 import json
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ValidationError
+from typing import List, Optional, Dict, Any
+
 from orchestration.graph import run_workflow, run_workflow_streaming
 from rag.vertex_search import search_app
 from protocol.events import ProtocolEvent
 from fastapi.middleware.cors import CORSMiddleware
 from schemas.decision_brief import DecisionBrief
+from schemas.common import Zone, Goal, Constraint
+from utils.firestore_sanitizer import sanitize_for_firestore
 
 app = FastAPI(
-    title="VeritAI Smart-City API",
-    description="API for the VeritAI Smart-City use case.",
-    version="0.1.0",
+    title="UrbanNexus Smart-City API",
+    description="API for the UrbanNexus Smart-City use case (V2 capable).",
+    version="0.2.0",
 )
 
 # Initialize Firestore client
@@ -38,108 +47,105 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class ProjectBrief(BaseModel):
-    """Pydantic model for the project brief."""
-    corridors: list[str]
-    sensors: dict
-    storage: str
-    vendor_hints: list[str]
+# --- V2 Models ---
+
+class AnalysisRequest(BaseModel):
+    """V2 Input Context Request."""
+    zone_id: str
+    goals: List[Goal]
+    constraints: List[Constraint] = []
+
+# --- Helper: Load Mock Data ---
+
+def load_mock_zones():
+    path = "data/mock_zones.json"
+    if os.path.exists(path):
+        with open(path, "r") as f:
+            return json.load(f)
+    return {"zones": []}
+
+MOCK_ZONES_DB = load_mock_zones()
+
+
+# --- Endpoints ---
+
+@app.get("/zones", summary="Get Available Demo Zones")
+def get_zones():
+    """Returns the list of mock zones for the frontend map."""
+    return MOCK_ZONES_DB
 
 @app.get("/kb/health", summary="Knowledge Base Health Check")
 def kb_health():
     """
     Performs a health check on the Knowledge Base by running a sample query.
     """
-    results = search_app(query="Sunshine Law video retention", top_k=3)
-    if results:
-        return {"status": "ok", "results": results}
-    else:
-        return {"status": "error", "message": "No results returned from KB."}
-
-@app.post("/analyze", summary="Analyze a Project Brief (Non-Streaming)")
-def analyze(brief: ProjectBrief):
-    """
-    Analyzes a project brief and returns a decision.
-    """
-    result = run_workflow(brief.model_dump())
-    trace_id = result.get("trace_id")
-    if trace_id and db is not None:
-        # Store the trace in Firestore
-        trace_ref = db.collection("veritai_traces").document(trace_id)
-        trace_ref.set({"events": result.get("events", [])})
-    # We don't want to return the events in the main response, just the trace_id
-    result.pop("events", None)
-    return result
-
-@app.get("/analyze-stream", summary="Analyze a Project Brief (Streaming)")
-async def analyze_stream(brief_json: str):
-    """
-    Analyzes a project brief and streams the events in real-time.
-    """
     try:
-        brief_data = json.loads(brief_json)
-        brief = ProjectBrief(**brief_data)
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid Project Brief JSON")
-    except ValidationError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid Project Brief data: {e}")
+        results = search_app(query="Sunshine Law video retention", top_k=3)
+        if results:
+            return {"status": "ok", "results": results}
+        else:
+            return {"status": "error", "message": "No results returned from KB."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@app.post("/analyze/v2", summary="Analyze Zone (V2 Streaming)")
+async def analyze_v2(request: AnalysisRequest):
+    """
+    V2 Analysis: Takes Zone ID + Goals, runs the 4-stage pipeline, and streams events.
+    """
+    # Convert Pydantic model to dict for the orchestrator
+    input_context = request.model_dump()
+    
     async def event_generator():
         trace_id = None
         final_response = None
         
-        for item in run_workflow_streaming(brief.model_dump()):
+        # Call the orchestrator
+        # Note: The orchestrator's streaming generator yields both ProtocolEvent objects and the final dict
+        for item in run_workflow_streaming(input_context):
+            
             if isinstance(item, ProtocolEvent):
-                # This is a step in the process
+                # Step Event
                 event = item
                 trace_id = event.session_id
-                if db is not None:
-                    # Save event to subcollection
-                    event_ref = db.collection("veritai_traces").document(trace_id).collection("events").document(event.step)
-                    event_ref.set(event.model_dump())
                 
-                # Yield event to client
+                # Firestore persistence (optional)
+                if db is not None:
+                    event_ref = db.collection("urbannexus_traces").document(trace_id).collection("events").document(event.step)
+                    # Use sanitizer to handle nested lists (coordinates) that Firestore rejects
+                    safe_payload = sanitize_for_firestore(json.loads(event.model_dump_json()))
+                    event_ref.set(safe_payload)
+                
+                # Stream to client
                 yield f"data: {event.model_dump_json()}\n\n"
             
             elif isinstance(item, dict):
-                # This is the final decision brief
+                # Final Result
                 final_response = item
                 trace_id = final_response.get("trace_id")
-
+        
+        # Save final result to Firestore
         if final_response and trace_id and db is not None:
-            # Save the final decision brief to the main trace document
-            trace_ref = db.collection("veritai_traces").document(trace_id)
-            # Exclude events list from the main doc, as they are in the subcollection
+            trace_ref = db.collection("urbannexus_traces").document(trace_id)
             final_response_copy = final_response.copy()
             final_response_copy.pop("events", None)
             trace_ref.set(final_response_copy, merge=True)
-        
-        # Yield final response to client
+            
+        # Yield final result
         if final_response:
-            yield f"data: {json.dumps(final_response)}\n\n"
+             yield f"data: {json.dumps(final_response)}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
+# --- Legacy Endpoints (Optional, kept for reference) ---
 
-@app.get("/trace/{trace_id}", summary="Get a trace by ID")
-def get_trace(trace_id: str):
-    """
-    Retrieves the protocol events for a given trace ID from the subcollection.
-    """
-    if db is None:
-        raise HTTPException(status_code=503, detail="Trace persistence not configured")
+class ProjectBrief(BaseModel):
+    corridors: list[str]
+    sensors: dict
+    storage: str
+    vendor_hints: list[str]
 
-    events_ref = db.collection("veritai_traces").document(trace_id).collection("events")
-    docs = events_ref.stream()
-    events = [doc.to_dict() for doc in docs]
-    
-    if events:
-        # Sort events by timestamp
-        events.sort(key=lambda e: e.get('timestamp', ''))
-        return events
-    else:
-        # Fallback to check the main document for old-style traces
-        trace_ref = db.collection("veritai_traces").document(trace_id)
-        trace = trace_ref.get()
-        if trace.exists and trace.to_dict().get("events"):
-            return trace.to_dict().get("events", [])
-        raise HTTPException(status_code=404, detail="Trace not found or contains no events.")
+@app.post("/analyze", summary="Legacy Analysis")
+def analyze(brief: ProjectBrief):
+    return run_workflow(brief.model_dump())

@@ -1,6 +1,6 @@
-# VeritAI Project Plan: "Go/No-Go for Smart-City Deployments"
+# UrbanNexus Project Plan: "Go/No-Go for Smart-City Deployments"
 
-This document outlines the development plan for VeritAI, a governed multi-agent reasoning system, using the Google Agent Development Kit (ADK).
+This document outlines the development plan for UrbanNexus, a governed multi-agent reasoning system, using the Google Agent Development Kit (ADK).
 
 ## 1. Use Case: "Go/No-Go for Smart-City Deployments"
 
@@ -8,7 +8,7 @@ The Minimum Viable Product (MVP) will focus on answering the following prompt:
 
 **Prompt:** *“Should City X deploy 500 streetlight AI nodes along corridors A/B to improve traffic safety and operations?”*
 
-## 2. The VeritAI Protocol (Retrieve → Critique → Synthesize → Validate)
+## 2. The UrbanNexus Protocol (Retrieve → Critique → Synthesize → Validate)
 
 The system will follow a four-step protocol to arrive at a decision.
 

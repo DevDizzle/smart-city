@@ -1,8 +1,8 @@
 """
-VeritAI Smart-City Use Case: Public Safety Specialist Agent
+UrbanNexus Smart-City Use Case: Public Safety Specialist Agent
 """
 import json
-from veritai.llm_client import GeminiClient
+from urbannexus.llm_client import GeminiClient
 from rag.vertex_search import search_app, Doc
 from schemas.common import Evidence, Risk, Requirement
 from schemas.public_safety import PublicSafetyFinding
