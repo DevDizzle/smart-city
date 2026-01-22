@@ -1,198 +1,206 @@
 """
-UrbanNexus Smart-City Use Case: Orchestration Graph (Refactored for UICII)
+UrbanNexus Smart-City Use Case: Orchestration Graph (ADK Refactor)
 """
 import os
 import uuid
 import json
 import logging
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor
-from typing import List, Dict, Generator
+from typing import Generator, Dict, Any, List
+from google.genai import types
 
-# Agents
-from agents.site_viability import SiteViabilityAgent
-from agents.sustainability import SustainabilitySpecialist
-from agents.connectivity import ConnectivitySpecialist
-from agents.public_safety import PublicSafetySpecialist
-from agents.privacy import PrivacyCounsel
-from agents.ot_security import OT_SecurityEngineer
+# ADK
+try:
+    from google.adk.agents import LlmAgent
+    from google.adk.runners import InMemoryRunner
+    from google.adk import types
+except ImportError:
+    logging.error("Google ADK not found. Please install 'google-adk'.")
+
+# Tools
+from agents.site_viability import assess_site_tool
+from agents.sustainability import analyze_sustainability_tool
+from agents.connectivity import analyze_connectivity_tool
+from agents.public_safety import assess_public_safety_tool
+from agents.privacy import assess_privacy_tool
+from agents.ot_security import assess_ot_security_tool
 
 # Protocol
 from protocol.events import ProtocolEvent
-
-# Schemas
-from schemas.decision_brief import DecisionBrief
-from schemas.common import Zone, Goal, Constraint, SolutionProposal
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
 
+# System Instruction
+CITY_PLANNER_INSTRUCTION = """
+You are the UrbanNexus City Planner. Your goal is to orchestrate a smart city deployment assessment.
 
-def _generate_summary_text(decision_brief: DecisionBrief, trace_id: str) -> str:
-    """Generates a human-readable text summary of the decision brief."""
-    summary = []
-    summary.append("==================================================")
-    summary.append("UrbanNexus Smart-City Decision Brief Summary")
-    summary.append("==================================================")
-    summary.append(f"Trace ID: {trace_id}")
-    summary.append(f"Timestamp: {datetime.utcnow().isoformat()}Z\n")
+Follow this workflow:
+1.  **Assessment:** Assess the site viability using the given Zone ID.
+2.  **Value Analysis:** Analyze sustainability and connectivity value using the zone data.
+3.  **Risk Analysis:** Analyze Public Safety, Privacy, and OT Security risks. You must construct a 'project brief' based on the assessment and value proposals to pass to these tools.
+4.  **Synthesis:** Synthesize all findings into a final decision (GO / MITIGATE / HOLD) and a summary.
 
-    summary.append("--------------------------------------------------")
-    summary.append("1. Deployment Recommendation")
-    summary.append("--------------------------------------------------")
-    summary.append(f"Decision: {decision_brief.overall_decision}")
-    summary.append(f"Context: {decision_brief.zone_context.name if decision_brief.zone_context else 'Unknown'}")
-    
-    if decision_brief.final_deployment_plan:
-        summary.append("\nProposed Solutions:")
-        for proposal in decision_brief.final_deployment_plan:
-            summary.append(f"  * {proposal.hardware.sku} @ {proposal.location_description}")
-            summary.append(f"    Value: {proposal.value_proposition}")
-    else:
-        summary.append("\nNo solutions proposed.")
-
-    summary.append("\n--------------------------------------------------")
-    summary.append("2. Risk Analysis")
-    summary.append("--------------------------------------------------")
-    if not decision_brief.combined_risks:
-        summary.append("No significant risks identified.")
-    else:
-        for risk in decision_brief.combined_risks:
-            summary.append(f"- [{risk.severity}] {risk.risk_id}: {risk.description}")
-            summary.append(f"  Mitigation: {risk.mitigation}")
-
-    return "\n".join(summary)
-
-
-def run_workflow(input_context: dict) -> dict:
-    """
-    Runs the full multi-agent workflow: Assessment -> Value -> Risk -> Synthesis.
-    
-    Args:
-        input_context: Dict containing 'zone_id', 'goals', 'constraints'.
-    """
-    # Simply consume the streaming generator to get the final result
-    generator = run_workflow_streaming(input_context)
-    final_result = None
-    for event in generator:
-        if isinstance(event, dict) and "trace_id" in event:
-            final_result = event
-    return final_result
-
+Output the final result as a structured JSON summary containing the decision and key findings.
+"""
 
 def run_workflow_streaming(input_context: dict) -> Generator:
     """
-    Runs the full multi-agent workflow, yielding events as they happen.
+    Runs the full multi-agent workflow using ADK.
     """
     session_id = str(uuid.uuid4())
-    events = []
-    output_dir = "agent_outputs"
-    os.makedirs(output_dir, exist_ok=True)
-
-    def create_event(step: str, agent: str, inputs: dict, outputs: dict, decision: str = None) -> ProtocolEvent:
-        event = ProtocolEvent(
-            session_id=session_id,
-            step=step,
-            agent=agent,
-            inputs_ref=inputs,
-            outputs_ref=outputs,
-            timestamp=datetime.utcnow().isoformat(),
-            decision_state=decision
-        )
-        events.append(event)
-        return event
-
-    # Unpack Input
     zone_id = input_context.get("zone_id", "default_zone")
-    goals_data = input_context.get("goals", [])
-    goals = [Goal(**g) for g in goals_data]
-
-    # ------------------------------------------------------------------
-    # Stage 1: Site Assessment
-    # ------------------------------------------------------------------
-    site_agent = SiteViabilityAgent()
-    zone_context = site_agent.run(zone_id)
+    goals = input_context.get("goals", [])
     
-    yield create_event("assessment", "SiteViabilityAgent", {"zone_id": zone_id}, zone_context.model_dump())
-
-    # ------------------------------------------------------------------
-    # Stage 2: Value Analysis (Advocates)
-    # ------------------------------------------------------------------
-    with ThreadPoolExecutor() as executor:
-        sust_future = executor.submit(SustainabilitySpecialist().analyze, zone_context, goals)
-        conn_future = executor.submit(ConnectivitySpecialist().analyze, zone_context, goals)
-        
-        sust_proposals = sust_future.result()
-        conn_proposals = conn_future.result()
-
-    yield create_event("value_analysis", "SustainabilitySpecialist", {"zone": zone_context.name}, {"proposals": [p.model_dump() for p in sust_proposals]})
-    yield create_event("value_analysis", "ConnectivitySpecialist", {"zone": zone_context.name}, {"proposals": [p.model_dump() for p in conn_proposals]})
-
-    all_proposals = sust_proposals + conn_proposals
-
-    # ------------------------------------------------------------------
-    # Stage 3: Risk Analysis (Critics)
-    # ------------------------------------------------------------------
-    # Adapter: Create a "Virtual Project Brief" for the legacy risk agents
-    virtual_project_brief = {
-        "zone_name": zone_context.name,
-        "description": zone_context.description,
-        "proposed_hardware": [p.hardware.sku for p in all_proposals],
-        "locations": [p.location_description for p in all_proposals],
-        "goals": [g.type for g in goals],
-        "vendor_hints": ["Ubicquia"] # Legacy hint
-    }
-
-    with ThreadPoolExecutor() as executor:
-        ps_future = executor.submit(PublicSafetySpecialist().analyze_brief, virtual_project_brief)
-        pr_future = executor.submit(PrivacyCounsel().analyze_brief, virtual_project_brief)
-        ot_future = executor.submit(OT_SecurityEngineer().analyze_brief, virtual_project_brief)
-
-        public_safety_finding = ps_future.result()
-        yield create_event("risk_analysis", "PublicSafetySpecialist", {"brief": "virtual_brief"}, public_safety_finding.model_dump())
-        
-        privacy_finding = pr_future.result()
-        yield create_event("risk_analysis", "PrivacyCounsel", {"brief": "virtual_brief"}, privacy_finding.model_dump())
-
-        ot_security_finding = ot_future.result()
-        yield create_event("risk_analysis", "OT_SecurityEngineer", {"brief": "virtual_brief"}, ot_security_finding.model_dump())
-
-    # ------------------------------------------------------------------
-    # Stage 4: Synthesis
-    # ------------------------------------------------------------------
-    all_risks = public_safety_finding.risks + privacy_finding.risks + ot_security_finding.risks
-    
-    # Simple Decision Logic: If High Risk, MITIGATE
-    overall_decision = "GO"
-    if any(r.severity == "High" for r in all_risks):
-        overall_decision = "MITIGATE"
-
-    decision_brief = DecisionBrief(
-        project_brief=virtual_project_brief,
-        zone_context=zone_context,
-        goals=goals,
-        final_deployment_plan=all_proposals,
-        public_safety=public_safety_finding,
-        privacy=privacy_finding,
-        ot_security=ot_security_finding,
-        combined_risks=all_risks,
-        combined_requirements=[], 
-        overall_decision=overall_decision,
-        overall_confidence=0.8, 
-        needs_human_review=(overall_decision != "GO"),
-        human_review_note="High risks detected." if overall_decision != "GO" else None
+    # 1. Define Agent
+    # We use the 'City Planner' supervisor pattern
+    planner_agent = LlmAgent(
+        name="city_planner",
+        model="gemini-3-flash-preview",
+        tools=[
+            assess_site_tool,
+            analyze_sustainability_tool,
+            analyze_connectivity_tool,
+            assess_public_safety_tool,
+            assess_privacy_tool,
+            assess_ot_security_tool
+        ],
+        instruction=CITY_PLANNER_INSTRUCTION
     )
     
-    yield create_event("synthesis", "Synthesizer", {}, decision_brief.model_dump(), overall_decision)
+    # 2. Setup Runner
+    runner = InMemoryRunner(agent=planner_agent)
+    
+    # Create session (required for InMemoryRunner)
+    import asyncio
+    asyncio.run(runner.session_service.create_session(session_id=session_id, user_id="user", app_name="InMemoryRunner"))
+    
+    # 3. Create User Message
+    user_msg_text = f"""
+    Assess the viability of zone '{zone_id}'.
+    
+    Strategic Goals:
+    {json.dumps(goals, indent=2)}
+    """
+    user_msg = types.Content(role="user", parts=[types.Part(text=user_msg_text)])
+    
+    # 4. Run & Adapt Events
+    logger.info(f"Starting ADK Workflow for session {session_id}")
+    
+    try:
+        # Adapter Logic
+        for event in runner.run(user_id="user", session_id=session_id, new_message=user_msg):
+            
+            # Map ADK Event to ProtocolEvent for Frontend Compatibility
+            # The frontend expects: step, agent, outputs_ref
+            
+            # Use 'step' to map tool calls to frontend steps
+            mapped_event = None
+            
+            # Debug: Print raw event type
+            # logger.info(f"Raw ADK Event: {type(event)}")
 
-    # Generate and save summary
-    summary_text = _generate_summary_text(decision_brief, session_id)
-    with open(os.path.join(output_dir, "final_recommendation_summary.txt"), "w") as f:
-        f.write(summary_text)
+            # We need to inspect the event type from google.adk.events
+            # But since we are streaming dicts to the API, we can just construct a dict.
+            
+            event_type = type(event).__name__
+            
+            if event_type == "ToolCall":
+                # A tool is being called. We can map this to "Starting Analysis..." or ignore.
+                pass
+                
+            elif event_type == "ToolOutput":
+                # A tool has returned data. THIS is what the frontend wants to see.
+                # event.tool_name gives us the tool.
+                # event.output gives us the result.
+                
+                tool_name = getattr(event, "tool_name", "")
+                tool_output = getattr(event, "output", {})
+                
+                # Map Tool Name -> Frontend Step & Agent
+                if "assess_site" in tool_name:
+                    mapped_event = {
+                        "step": "assessment",
+                        "agent": "SiteViabilityAgent", 
+                        "outputs_ref": tool_output
+                    }
+                elif "sustainability" in tool_name:
+                    mapped_event = {
+                        "step": "value_analysis",
+                        "agent": "SustainabilitySpecialist",
+                        "outputs_ref": {"proposals": tool_output} # Frontend expects 'proposals' list
+                    }
+                elif "connectivity" in tool_name:
+                    mapped_event = {
+                        "step": "value_analysis",
+                        "agent": "ConnectivitySpecialist",
+                        "outputs_ref": {"proposals": tool_output}
+                    }
+                elif "public_safety" in tool_name:
+                    mapped_event = {
+                        "step": "risk_analysis",
+                        "agent": "PublicSafetySpecialist",
+                        "outputs_ref": tool_output # Expects 'risks' list inside
+                    }
+                elif "privacy" in tool_name:
+                    mapped_event = {
+                        "step": "risk_analysis",
+                        "agent": "PrivacyCounsel",
+                        "outputs_ref": tool_output
+                    }
+                elif "ot_security" in tool_name:
+                    mapped_event = {
+                        "step": "risk_analysis",
+                        "agent": "OT_SecurityEngineer",
+                        "outputs_ref": tool_output
+                    }
 
-    # Final Return
-    final_response = decision_brief.model_dump()
-    final_response["trace_id"] = session_id
-    final_response["events"] = [event.model_dump() for event in events]
-    yield final_response
+            elif event_type == "ModelResponse":
+                # The final text from the model. 
+                # We can try to parse the "Decision" from the text or just send it as synthesis.
+                text = getattr(event, "text", "")
+                
+                # Simple heuristic to extract decision from text
+                decision = "GO"
+                if "MITIGATE" in text.upper():
+                    decision = "MITIGATE"
+                elif "HOLD" in text.upper():
+                    decision = "HOLD"
+                
+                mapped_event = {
+                    "step": "synthesis",
+                    "agent": "Synthesizer",
+                    "outputs_ref": {"summary": text},
+                    "decision_state": decision
+                }
+
+            # If we successfully mapped it, yield it wrapped in the standard format
+            if mapped_event:
+                mapped_event["session_id"] = session_id
+                mapped_event["timestamp"] = datetime.utcnow().isoformat()
+                mapped_event["inputs_ref"] = {} # Placeholder
+                yield mapped_event
+            
+            # Always yield the raw event for the final result collector (in run_workflow)
+            yield event
+
+    except Exception as e:
+        logger.error(f"Error during ADK execution: {e}")
+        yield {"error": str(e)}
+
+def run_workflow(input_context: dict) -> dict:
+    """
+    Runs the workflow and returns the final result.
+    """
+    generator = run_workflow_streaming(input_context)
+    final_result = None
+    all_events = []
+    
+    for event in generator:
+        all_events.append(event)
+        # Identify the final model response
+        # In ADK, this is typically the last event or an event with 'text' from the model
+        final_result = event
+        
+    return {"events": all_events, "final_result": final_result}

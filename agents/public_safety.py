@@ -164,3 +164,25 @@ if __name__ == '__main__':
     finding = specialist.analyze_brief(sample_brief)
     print(finding.model_dump_json(indent=2))
 
+# --- ADK Integration ---
+try:
+    from google.adk.tools import FunctionTool
+    
+    _ps_specialist = PublicSafetySpecialist()
+
+    def assess_public_safety_risks(project_brief: dict) -> dict:
+        """
+        Analyzes the project brief for public safety risks and requirements.
+        
+        Args:
+            project_brief: Dict with 'corridors', 'sensors', 'storage', 'vendor_hints'.
+        """
+        result = _ps_specialist.analyze_brief(project_brief)
+        return result.model_dump()
+
+    assess_public_safety_tool = FunctionTool(assess_public_safety_risks)
+
+except ImportError:
+    pass
+
+

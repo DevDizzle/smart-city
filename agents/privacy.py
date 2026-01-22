@@ -137,3 +137,25 @@ class PrivacyCounsel:
             notes="Privacy analysis based on project brief and KB retrieval.",
             confidence=confidence,
         )
+
+# --- ADK Integration ---
+try:
+    from google.adk.tools import FunctionTool
+    
+    _privacy_counsel = PrivacyCounsel()
+
+    def assess_privacy_risks(project_brief: dict) -> dict:
+        """
+        Analyzes the project brief for privacy risks and compliance requirements.
+        
+        Args:
+            project_brief: Dict with 'corridors', 'sensors', 'storage', 'vendor_hints'.
+        """
+        result = _privacy_counsel.analyze_brief(project_brief)
+        return result.model_dump()
+
+    assess_privacy_tool = FunctionTool(assess_privacy_risks)
+
+except ImportError:
+    pass
+

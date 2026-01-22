@@ -138,3 +138,25 @@ class OT_SecurityEngineer:
             notes="OT security analysis based on project brief and KB retrieval.",
             confidence=confidence,
         )
+
+# --- ADK Integration ---
+try:
+    from google.adk.tools import FunctionTool
+    
+    _ot_engineer = OT_SecurityEngineer()
+
+    def assess_ot_security_risks(project_brief: dict) -> dict:
+        """
+        Analyzes the project brief for OT/ICS security risks and requirements.
+        
+        Args:
+            project_brief: Dict with 'corridors', 'sensors', 'storage', 'vendor_hints'.
+        """
+        result = _ot_engineer.analyze_brief(project_brief)
+        return result.model_dump()
+
+    assess_ot_security_tool = FunctionTool(assess_ot_security_risks)
+
+except ImportError:
+    pass
+

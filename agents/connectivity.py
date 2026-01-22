@@ -88,3 +88,29 @@ class ConnectivitySpecialist:
                 proposals.append(proposal)
                 
         return proposals
+
+# --- ADK Integration ---
+try:
+    from google.adk.tools import FunctionTool
+    
+    _conn_specialist = ConnectivitySpecialist()
+
+    def analyze_connectivity_value(zone_context: dict, goals: List[dict]) -> List[dict]:
+        """
+        Analyzes the zone and goals to propose connectivity-focused hardware solutions (WiFi, Digital Divide).
+        
+        Args:
+            zone_context: The zone data object/dict.
+            goals: List of goal objects/dicts.
+        """
+        # Type conversions for robustness
+        z = Zone(**zone_context) if isinstance(zone_context, dict) else zone_context
+        g = [Goal(**goal) if isinstance(goal, dict) else goal for goal in goals]
+        
+        results = _conn_specialist.analyze(z, g)
+        return [r.model_dump() for r in results]
+
+    analyze_connectivity_tool = FunctionTool(analyze_connectivity_value)
+
+except ImportError:
+    pass

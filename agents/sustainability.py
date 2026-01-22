@@ -89,3 +89,31 @@ class SustainabilitySpecialist:
                 proposals.append(proposal)
                 
         return proposals
+
+# --- ADK Integration ---
+try:
+    from google.adk.tools import FunctionTool
+    
+    _sust_specialist = SustainabilitySpecialist()
+
+    def analyze_sustainability_value(zone_context: dict, goals: List[dict]) -> List[dict]:
+        """
+        Analyzes the zone and goals to propose sustainability-focused hardware solutions.
+        
+        Args:
+            zone_context: The zone data object/dict.
+            goals: List of goal objects/dicts.
+        """
+        # Convert dicts back to Pydantic if necessary, or let the agent handle it.
+        # The agent expects Zone and List[Goal].
+        # But for robustness with tool calling, we might receive dicts.
+        z = Zone(**zone_context) if isinstance(zone_context, dict) else zone_context
+        g = [Goal(**goal) if isinstance(goal, dict) else goal for goal in goals]
+        
+        results = _sust_specialist.analyze(z, g)
+        return [r.model_dump() for r in results]
+
+    analyze_sustainability_tool = FunctionTool(analyze_sustainability_value)
+
+except ImportError:
+    pass

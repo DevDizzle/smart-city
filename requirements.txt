@@ -5,3 +5,4 @@ pydantic
 google-cloud-firestore
 google-genai>=1.0.0
 python-dotenv
+google-adk

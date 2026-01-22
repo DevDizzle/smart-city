@@ -47,3 +47,24 @@ class SiteViabilityAgent:
             )
 
         return Zone(**zone_data)
+
+# --- ADK Integration ---
+try:
+    from google.adk.tools import FunctionTool
+    
+    # Singleton instance for the tool
+    _viability_agent = SiteViabilityAgent()
+
+    def assess_site_viability(zone_id: str) -> Zone:
+        """
+        Retrieves the Zone context (infrastructure, dimensions, assets) from the GIS database.
+        
+        Args:
+            zone_id: The ID of the zone to assess (e.g., "zone-1").
+        """
+        return _viability_agent.run(zone_id)
+
+    assess_site_tool = FunctionTool(assess_site_viability)
+
+except ImportError:
+    pass

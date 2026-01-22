@@ -3,6 +3,7 @@ UrbanNexus Smart-City Use Case: FastAPI API (V2 Updated)
 """
 import json
 import os
+import uuid
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -101,40 +102,34 @@ async def analyze_v2(request: AnalysisRequest):
         trace_id = None
         final_response = None
         
-        # Call the orchestrator
-        # Note: The orchestrator's streaming generator yields both ProtocolEvent objects and the final dict
+        # Call the orchestrator (ADK)
         for item in run_workflow_streaming(input_context):
             
-            if isinstance(item, ProtocolEvent):
-                # Step Event
-                event = item
-                trace_id = event.session_id
-                
-                # Firestore persistence (optional)
-                if db is not None:
-                    event_ref = db.collection("urbannexus_traces").document(trace_id).collection("events").document(event.step)
-                    # Use sanitizer to handle nested lists (coordinates) that Firestore rejects
-                    safe_payload = sanitize_for_firestore(json.loads(event.model_dump_json()))
+            # Treat everything as a dict (ADK events or final result)
+            data_payload = item
+            if not isinstance(data_payload, dict) and hasattr(data_payload, 'model_dump'):
+                 data_payload = data_payload.model_dump()
+            
+            # Try to extract trace_id/session_id for persistence
+            if not trace_id:
+                trace_id = data_payload.get("session_id") or data_payload.get("trace_id")
+            
+            # Firestore persistence (optional, best effort)
+            if db is not None and trace_id:
+                try:
+                    # Create a unique ID for the event or use step if available
+                    step_id = data_payload.get("step") or str(uuid.uuid4())
+                    event_ref = db.collection("urbannexus_traces").document(trace_id).collection("events").document(step_id)
+                    safe_payload = sanitize_for_firestore(json.loads(json.dumps(data_payload, default=str)))
                     event_ref.set(safe_payload)
-                
-                # Stream to client
-                yield f"data: {event.model_dump_json()}\n\n"
-            
-            elif isinstance(item, dict):
-                # Final Result
-                final_response = item
-                trace_id = final_response.get("trace_id")
-        
-        # Save final result to Firestore
-        if final_response and trace_id and db is not None:
-            trace_ref = db.collection("urbannexus_traces").document(trace_id)
-            final_response_copy = final_response.copy()
-            final_response_copy.pop("events", None)
-            trace_ref.set(final_response_copy, merge=True)
-            
-        # Yield final result
-        if final_response:
-             yield f"data: {json.dumps(final_response)}\n\n"
+                except Exception as e:
+                    print(f"Firestore save error: {e}")
+
+            # Stream to client
+            yield f"data: {json.dumps(data_payload, default=str)}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 

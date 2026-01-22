@@ -1,0 +1,9 @@
+venv/
+.git/
+urbannexus-ui/
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+agent_outputs/
+tmp/
